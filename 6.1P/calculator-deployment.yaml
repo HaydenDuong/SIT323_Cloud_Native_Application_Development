@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calculator-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculator-pod
+  template:
+    metadata:
+      labels:
+        app: calculator-pod
+    spec:
+      containers:
+      - name: calculator-container
+
+        # Use the image from Docker Hub
+        image: hayden2310/calculator:v1
+        imagePullPolicy: Always # Always pull the image from the Docker Hub registry
+
+        # Use the image from local registry
+        # image: calculator:v1
+        # imagePullPolicy: Never = Do not pull the image from the Docker Hub registry
+
+        ports:
+        - containerPort: 3040

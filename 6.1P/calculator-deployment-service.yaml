@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: calculator-service
+spec:
+  selector:
+    app: calculator-pod # This should match the label of the pods created by the deployment
+  ports:
+    - protocol: TCP
+      targetPort: 3040 # The port on the container that the calculator app listens on
+      port: 80  # Service port in cluster
+      nodePort: 30001 # External accessible port on the node
+  type: NodePort

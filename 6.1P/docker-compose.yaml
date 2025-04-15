@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  app:
+    image: calculator:v1
+    container_name: calculator_app
+    ports:
+      - "3040:3040"  # Map host port 3040 to container port 3040
+    pull_policy: never  # Do not pull the image from the registry
