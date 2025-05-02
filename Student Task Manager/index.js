@@ -30,12 +30,13 @@ app.put('/tasks/:id', (req, res) => {
   const { id } = req.params;
   const { title, description, dueDate, status } = req.body;
   const task = tasks.find(t => t.id == id);
+
   if (task) {
     task.title = title;
     task.description = description;
     task.dueDate = dueDate;
     task.status = status;
-    res.status(200).send(task);
+    res.status(200).send(tasks);
   }
   else {
     res.status(404).send({ message: 'Task not found' });
@@ -46,11 +47,15 @@ app.put('/tasks/:id', (req, res) => {
 // Example: DELETE /tasks/1
 app.delete('/tasks/:id', (req, res) => {
   const { id } = req.params;
+  task = tasks.find(t => t.id == id);
 
-  // filter out the task with the given ID
-  // thus, tasks will be a new array of tasks without the deleted task 
-  tasks = tasks.filter(t => t.id != id);
-  res.status(200).send('Task deleted successfully');
+  if (task) {
+    tasks = tasks.filter(t => t.id != id);
+    res.status(200).send('Task deleted successfully');
+  } 
+  else {
+    res.status(404).send({ message: 'Task not found' });
+  }
 });
 
 const PORT = process.env.PORT || 8080;
