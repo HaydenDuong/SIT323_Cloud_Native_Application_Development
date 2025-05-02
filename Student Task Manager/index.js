@@ -18,8 +18,8 @@ app.get('/tasks', (req, res) => {
 // Endpoint to create a new task
 // Example: POST /tasks with body { "title": "Task 1", "dueDate": "2023-10-01", "status": "pending" }
 app.post('/tasks', (req, res) => {
-  const {title, dueDate, status} = req.body;
-  const task = {id: tasks.length + 1, title, dueDate, status};
+  const {title, description, dueDate, status} = req.body;
+  const task = {id: tasks.length + 1, title, description, dueDate, status};
   tasks.push(task);
   res.status(201).send(task);
 });
@@ -28,10 +28,11 @@ app.post('/tasks', (req, res) => {
 // Example: PUT /tasks/1 with body { "title": "Updated Task", "dueDate": "2023-10-02", "status": "completed" }
 app.put('/tasks/:id', (req, res) => {
   const { id } = req.params;
-  const { title, dueDate, status } = req.body;
+  const { title, description, dueDate, status } = req.body;
   const task = tasks.find(t => t.id == id);
   if (task) {
     task.title = title;
+    task.description = description;
     task.dueDate = dueDate;
     task.status = status;
     res.status(200).send(task);
