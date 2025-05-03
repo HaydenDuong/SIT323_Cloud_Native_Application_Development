@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Task Manager</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    form { display:flex; gap: 10px; margin-bottom: 20px; }
+    input, select, button { padding: 10px; }
+    .task { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Student Task Manager</h1>
+
+  <form id="task-form" action="javascript:void(0);">
+    <input type="text" id="title"placeholder="Task Title" required>
+    <input type="text" id="description" placeholder="Task Description">
+    <label for="dueDate">Due Date:</label>
+    <input type="date" id="dueDate" title="Select the due date for the task" required>
+
+    <label for="status">Task Status:</label>
+    <select id="status">
+      <option value="pending">Pending</option>
+      <option value="completed">Completed</option>
+    </select>
+
+    <button type="submit">Add Task</button>
+  </form>
+
+  <div id="tasks"></div>
+  <script src="script.js"></script>
+</body>
+</html>

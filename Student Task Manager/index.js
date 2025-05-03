@@ -2,6 +2,11 @@
 // This is a simple Express.js application that manages tasks for students.
 const express = require('express');
 const app = express();
+const path = require('path');
+const cors = require('cors');
+
+app.use(cors()); // Enable CORS for all routes
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the public directory
 app.use(express.json());
 
 let tasks = [];
@@ -19,6 +24,10 @@ app.get('/tasks', (req, res) => {
 // Example: POST /tasks with body { "title": "Task 1", "dueDate": "2023-10-01", "status": "pending" }
 app.post('/tasks', (req, res) => {
   const {title, description, dueDate, status} = req.body;
+  if (!title || !dueDate || !status) {
+    return res.status(400).send({ message: 'Title, due date, and status are required' });
+  }
+
   const task = {id: tasks.length + 1, title, description, dueDate, status};
   tasks.push(task);
   res.status(201).send(task);
