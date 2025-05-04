@@ -81,9 +81,12 @@ document.getElementById('task-form').addEventListener('submit', async (e) => {
       const taskList = document.getElementById('tasks');
       renderTasks(updatedTasks, taskList); // Render the new task
       document.getElementById('task-form').reset(); // Reset the form
+
+      //
+      taskList.scrollIntoView({ behavior: 'smooth', block: 'end' }); // Scroll to the task list
     } else {
       const errorData = await response.json();
-      alert('Failed to add task: ${errorData.message || Unknown error}');
+      alert(`Failed to add task: ${errorData.message || 'Unknown error'}`);
     }
   } catch (error) {
     console.error('Error adding task:', error);
