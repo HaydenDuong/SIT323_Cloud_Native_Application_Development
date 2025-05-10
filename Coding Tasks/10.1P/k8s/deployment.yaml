@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task10-1p-calculator-deployment
+  labels:
+    app: task10-1p-calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: task10-1p-calculator
+  template:
+    metadata:
+      labels:
+        app: task10-1p-calculator
+    spec:
+      containers:
+      - name: task10-1p-calculator-container
+        image: hayden2310/task10p-calculator:v1
+        ports:
+        - containerPort: 3040
+  

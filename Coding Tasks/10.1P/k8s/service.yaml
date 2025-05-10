@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: task10-1p-calculator-service
+  labels:
+    app: task10-1p-calculator
+spec:
+  selector:
+    app: task10-1p-calculator
+  ports:
+    - protocol: TCP
+      port: 80 
+      targetPort: 3040 
+  type: LoadBalancer
