@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: task10-1p-calculator-container
-        image: hayden2310/task10p-calculator:v1
+        image: hayden2310/task10p-calculator:v2
         ports:
         - containerPort: 3040
   

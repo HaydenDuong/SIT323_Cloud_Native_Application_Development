@@ -61,6 +61,7 @@ app.get("/multiply", validateInputs, (req, res) => {
     try {
         const { a, b } = req.validatedNumbers;
         const result = a * b;
+        console.log(`Multiply endpoint was called with a=${a} and b=${b}, result=${result}`);
         res.json({ 
             status: "success",
             statusCode: 200,
