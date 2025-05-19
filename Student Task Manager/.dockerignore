@@ -1,0 +1,23 @@
+# Files and directories to ignore when building the Docker image.
+
+# Git specific
+.git
+.gitignore
+
+# Docker specific
+.dockerignore
+Dockerfile
+
+# Node.js dependencies - these will be installed inside the container
+node_modules/
+npm-debug.log
+
+# Service account keys - should not be included in the image
+sit323-studenttaskmanager-43b726fc0e9a.json
+
+# VS Code specific
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db

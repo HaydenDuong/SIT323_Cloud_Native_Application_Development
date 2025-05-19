@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: studenttaskmanager-deployment
+  labels:
+    app: studenttaskmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: studenttaskmanager
+  template:
+    metadata:
+      labels:
+        app: studenttaskmanager
+    spec:
+      containers:
+        - name: studenttaskmanager-container
+          image: australia-southeast2-docker.pkg.dev/sit323-studenttaskmanager/studenttaskmanager/hayden2310/student-task-manager:v1
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            
