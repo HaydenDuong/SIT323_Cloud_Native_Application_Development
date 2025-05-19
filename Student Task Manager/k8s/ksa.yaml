@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: studenttaskmanager-ksa
+  namespace: default
+  labels:
+    app: studenttaskmanager

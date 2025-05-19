@@ -2,16 +2,13 @@
 // This is a simple Express.js application that manages tasks for students.
 const express = require('express');
 const admin = require('firebase-admin'); // Add firebase-admin
-const serviceAccount = require('./sit323-studenttaskmanager-43b726fc0e9a.json'); // Add path to your service account key
 
 // Initialize Firebase Admin SDK
-const firebaseApp = admin.initializeApp({ // Assign to a variable
-  credential: admin.credential.cert(serviceAccount),
-  projectId: 'sit323-studenttaskmanager' // Explicitly add your project ID
+const firebaseApp = admin.initializeApp({
+  projectId: 'sit323-studenttaskmanager'
 });
 
 // Get a reference to the Firestore database
-// const db = admin.firestore('studenttaskmanagerdb'); // Comment out the old way
 const db = firebaseApp.firestore(); // Connect to the (default) database
 
 const app = express();
