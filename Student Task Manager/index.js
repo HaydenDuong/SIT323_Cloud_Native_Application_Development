@@ -15,29 +15,51 @@ const app = express();
 const path = require('path');
 const cors = require('cors');
 
+// Authentication Middleware
+const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1]; // Expecting "Bearer TOKEN"
+
+  if (token == null) {
+    return res.status(401).send({ message: 'Authentication token required.' });
+  }
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken; // Add decoded token (contains uid, email, etc.) to request object
+    next(); 
+  } catch (error) {
+    console.error('Error verifying auth token:', error.code, error.message);
+    if (error.code === 'auth/id-token-expired') {
+      return res.status(401).send({ message: 'Token expired. Please sign in again.' });
+    }
+    // For other auth errors (e.g., malformed token, revoked token), send 403
+    return res.status(403).send({ message: 'Invalid or malformed authentication token.' });
+  }
+};
+
 app.use(cors()); // Enable CORS for all routes
 app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the public directory
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('Student Task Manager API'); 
+  res.send('Student Task Manager API - Now with Auth!'); 
 });
 
-// Endpoint to get all tasks
-app.get('/tasks', async (req, res) => { // Make the handler async
+// Endpoint to get all tasks FOR THE AUTHENTICATED USER
+app.get('/tasks', authenticateToken, async (req, res) => {
   try {
-    const tasksCollection = db.collection('tasks');
-    const snapshot = await tasksCollection.get();
+    const { uid } = req.user; // UID from verified token
+    const tasksCollection = db.collection('tasks').where('userId', '==', uid);
+    const snapshot = await tasksCollection.orderBy('createdAt', 'desc').get(); // Optional: order by creation time
 
     if (snapshot.empty) {
-      return res.status(200).send([]); // Send empty array if no tasks
+      return res.status(200).send([]); 
     }
-
     const tasksList = [];
     snapshot.forEach(doc => {
       tasksList.push({ id: doc.id, ...doc.data() });
     });
-
     res.status(200).send(tasksList);
   } catch (error) {
     console.error("Error fetching tasks:", error);
@@ -45,104 +67,97 @@ app.get('/tasks', async (req, res) => { // Make the handler async
   }
 });
 
-// Endpoint to create a new task
-// Example: POST /tasks with body { "title": "Task 1", "dueDate": "2023-10-01", "status": "pending" }
-app.post('/tasks', async (req, res) => { // Make the handler async
+// Endpoint to create a new task FOR THE AUTHENTICATED USER
+app.post('/tasks', authenticateToken, async (req, res) => {
   try {
+    const { uid } = req.user; // UID from verified token
     const { title, description, dueDate, status } = req.body;
     if (!title || !dueDate || !status) {
       return res.status(400).send({ message: 'Title, due date, and status are required' });
     }
-
-    // Prepare the new task data
-    const newTask = {
+    const newTaskData = {
+      userId: uid, // Associate task with user
       title,
-      description: description || null, // Store null if description is not provided
+      description: description || null, 
       dueDate,
       status,
-      createdAt: admin.firestore.FieldValue.serverTimestamp() // Add a timestamp
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp() // Also set updatedAt on creation
     };
-
-    // Add the new task to the 'tasks' collection
-    const docRef = await db.collection('tasks').add(newTask);
-
-    // Send back the newly created task with its ID
-    res.status(201).send({ id: docRef.id, ...newTask });
-
+    const docRef = await db.collection('tasks').add(newTaskData);
+    res.status(201).send({ id: docRef.id, ...newTaskData });
   } catch (error) {
     console.error("Error creating task:", error);
     res.status(500).send({ message: 'Failed to create task', error: error.message });
   }
 });
 
-// Endpoint to update a task by ID
-// Example: PUT /tasks/1 with body { "title": "Updated Task", "dueDate": "2023-10-02", "status": "completed" }
-app.put('/tasks/:id', async (req, res) => { // Make the handler async
+// Endpoint to update a task by ID, checking ownership
+app.put('/tasks/:id', authenticateToken, async (req, res) => {
   try {
+    const { uid } = req.user;
     const { id } = req.params;
     const { title, description, dueDate, status } = req.body;
 
-    // Basic validation: ensure at least one field is being updated
-    if (!title && !description && !dueDate && !status) {
+    if (!title && description === undefined && !dueDate && !status) { // Check if description is explicitly undefined for clearing
       return res.status(400).send({ message: 'No fields provided for update' });
     }
 
     const taskRef = db.collection('tasks').doc(id);
+    const doc = await taskRef.get();
 
-    // Construct an object with only the fields to be updated
+    if (!doc.exists) {
+      return res.status(404).send({ message: 'Task not found' });
+    }
+    const taskData = doc.data();
+    if (taskData.userId !== uid) {
+      return res.status(403).send({ message: 'Forbidden: You do not own this task.' });
+    }
+
     const updatedFields = {};
     if (title !== undefined) updatedFields.title = title;
-    if (description !== undefined) updatedFields.description = description;
+    if (description !== undefined) updatedFields.description = description; // Allows setting to null or empty string
     if (dueDate !== undefined) updatedFields.dueDate = dueDate;
     if (status !== undefined) updatedFields.status = status;
-
-    // Add a timestamp for the update
     updatedFields.updatedAt = admin.firestore.FieldValue.serverTimestamp();
 
     await taskRef.update(updatedFields);
-
-    // Optionally, you can fetch the updated document and send it back
-    // For now, let's send a success message or just the updated fields information
-    res.status(200).send({ message: 'Task updated successfully', id: id, changes: updatedFields });
-
+    // Fetch the updated document to send back the full updated state
+    const updatedDoc = await taskRef.get();
+    res.status(200).send({ id: updatedDoc.id, ...updatedDoc.data() });
   } catch (error) {
     console.error("Error updating task:", error);
-    // Check if the error is because the document was not found
-    if (error.code === 5) { // Firestore error code for NOT_FOUND
-        return res.status(404).send({ message: 'Task not found' });
+    if (error.code === 5) { 
+        return res.status(404).send({ message: 'Task not found during update attempt' });
     }
     res.status(500).send({ message: 'Failed to update task', error: error.message });
   }
 });
 
-// Endpoint to delete a task by ID
-// Example: DELETE /tasks/1
-app.delete('/tasks/:id', async (req, res) => { // Make the handler async
+// Endpoint to delete a task by ID, checking ownership
+app.delete('/tasks/:id', authenticateToken, async (req, res) => {
   try {
+    const { uid } = req.user;
     const { id } = req.params;
     const taskRef = db.collection('tasks').doc(id);
+    const doc = await taskRef.get();
 
-    // Check if the document exists before attempting to delete (optional, but good practice)
-    // const doc = await taskRef.get();
-    // if (!doc.exists) {
-    //   return res.status(404).send({ message: 'Task not found' });
-    // }
-
+    if (!doc.exists) {
+      return res.status(404).send({ message: 'Task not found' });
+    }
+    const taskData = doc.data();
+    if (taskData.userId !== uid) {
+      return res.status(403).send({ message: 'Forbidden: You do not own this task.' });
+    }
     await taskRef.delete();
-
     res.status(200).send({ message: 'Task deleted successfully', id: id });
-
   } catch (error) {
     console.error("Error deleting task:", error);
-    // Firestore delete operation doesn't typically error if the doc doesn't exist,
-    // but other errors could occur.
-    // If you explicitly check for existence first (as in commented code above),
-    // the NOT_FOUND error handling might be different.
     res.status(500).send({ message: 'Failed to delete task', error: error.message });
   }
 });
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server with auth is running on http://localhost:${PORT}`);
 });

@@ -108,7 +108,7 @@ async function fetchAndRenderTasks() {
   console.log("Fetching tasks...");
   try {
     const response = await fetch('http://34.129.213.124/tasks', {
-      headers: { /* 'Authorization': `Bearer ${currentIdToken}` // Add when backend ready */ }
+      headers: { 'Authorization': `Bearer ${currentIdToken}` /* Add when backend ready */ }
     });
     if (!response.ok) {
       let errorMsg = `<p>Could not load tasks (Status: ${response.status})</p>`;
@@ -164,7 +164,7 @@ if (taskListElement) {
       try {
         const response = await fetch(`http://34.129.213.124/tasks/${id}`, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' /* 'Authorization': `Bearer ${currentIdToken}` */ }
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentIdToken}` }
         });
         if (response.ok) fetchAndRenderTasks(); 
         else {
@@ -220,7 +220,7 @@ if (taskForm) {
     try {
       const response = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' /* 'Authorization': `Bearer ${currentIdToken}` */ },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentIdToken}` },
         body: JSON.stringify(taskData),
       });
       if (response.ok) {
