@@ -17,7 +17,7 @@ spec:
       serviceAccountName: studenttaskmanager-ksa
       containers:
         - name: studenttaskmanager-container
-          image: australia-southeast2-docker.pkg.dev/sit323-studenttaskmanager/studenttaskmanager/hayden2310/studenttaskmanager:v2
+          image: australia-southeast2-docker.pkg.dev/sit323-studenttaskmanager/studenttaskmanager/hayden2310/studenttaskmanager:v3
           ports:
             - containerPort: 8080
           resources:
