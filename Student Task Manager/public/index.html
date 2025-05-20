@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Task Manager</title>
 
+  <!-- Firebase SDKs -->
+  <!-- It's recommended to use specific versions for production -->
+  <!-- Check for the latest version from https://firebase.google.com/docs/web/setup -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js" type="module"></script>
+
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4;}
 
@@ -35,24 +41,79 @@
   <div class ="container">
     <h1>Student Task Manager</h1>
 
-    <form id="task-form" action="javascript:void(0);">
-      <input type="text" id="title"placeholder="Task Title" required>
-      <input type="text" id="description" placeholder="Task Description">
-      <label for="dueDate">Due Date:</label>
-      <input type="date" id="dueDate" title="Select the due date for the task" required>
+    <!-- Authentication Section -->
+    <div id="auth-container" style="margin-bottom: 20px; padding: 10px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center;">
+      <p id="auth-status">Please sign in to manage tasks.</p>
+      <button id="sign-in-google-button" type="button">Sign in with Google</button>
+      <button id="sign-out-button" type="button" style="display: none; background-color: #ff6666;">Sign Out</button>
+    </div>
 
-      <label for="status">Task Status:</label>
-      <select id="status">
-        <option value="pending">Pending</option>
-        <option value="completed">Completed</option>
-      </select>
-      <button type="submit">Add Task</button>
-      
-    </form>
+    <!-- Task Management Section (will be hidden if not authenticated) -->
+    <div id="task-management-section" style="display: none;">
+      <form id="task-form" action="javascript:void(0);">
+        <input type="text" id="title"placeholder="Task Title" required>
+        <input type="text" id="description" placeholder="Task Description">
+        <label for="dueDate">Due Date:</label>
+        <input type="date" id="dueDate" title="Select the due date for the task" required>
+
+        <label for="status">Task Status:</label>
+        <select id="status">
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+        </select>
+        <button type="submit">Add Task</button>
+        
+      </form>
 
     
-    <div class="task-list" id="tasks"></div>
+      <div class="task-list" id="tasks"></div>
+    </div> <!-- End of task-management-section -->
+
   </div>
-  <script src="script.js" defer></script>
+
+  <!-- Firebase Initialization Script (MUST be before script.js) -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDB_zX10wGIKko7sq61wVPgyZtK2NQtPYo", // YOUR ACTUAL KEY
+      authDomain: "sit323-studenttaskmanager.firebaseapp.com", // YOUR ACTUAL DOMAIN
+      projectId: "sit323-studenttaskmanager",                  // YOUR PROJECT ID
+      storageBucket: "sit323-studenttaskmanager.firebasestorage.app", // YOUR STORAGE BUCKET
+      messagingSenderId: "313765412443",                      // YOUR SENDER ID
+      appId: "1:313765412443:web:88855f21796629582b497e"       // YOUR APP ID
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+
+      // Make auth functions globally available for script.js
+      window.firebaseAuth = auth;
+      window.googleAuthProvider = provider;
+      window.firebaseSignInWithPopup = signInWithPopup;
+      window.firebaseOnAuthStateChanged = onAuthStateChanged;
+      window.firebaseSignOutFunction = firebaseSignOut; 
+
+      console.log("Firebase SDK initialized successfully in index.html and auth functions set on window.");
+    } catch (error) {
+      console.error("Error initializing Firebase in index.html:", error);
+      // Display an error to the user on the page itself if Firebase fails to load
+      const authStatusDiv = document.getElementById('auth-status');
+      if (authStatusDiv) {
+        authStatusDiv.textContent = "Critical error: Firebase could not be initialized. App cannot function.";
+        authStatusDiv.style.color = "red";
+      }
+      const signInBtn = document.getElementById('sign-in-google-button');
+      if(signInBtn) signInBtn.disabled = true;
+    }
+  </script>
+
+  <!-- Your main application script -->
+  <script src="script.js" defer></script> 
+
 </body>
 </html>
